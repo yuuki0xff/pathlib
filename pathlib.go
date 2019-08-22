@@ -1,6 +1,7 @@
 package pathlib
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -16,14 +17,14 @@ type OsPath struct {
 }
 
 // New Returns a new path.
-func New(path string) *OsPath {
+func New(path string) Path {
 	p := new(OsPath)
 	p.Path = path
 	return p
 }
 
 // Absolute Returns an absolute representation of path.
-func (p *OsPath) Absolute() (*OsPath, error) {
+func (p *OsPath) Absolute() (Path, error) {
 	pth, err := filepath.Abs(p.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "get absolute failed")
@@ -33,7 +34,7 @@ func (p *OsPath) Absolute() (*OsPath, error) {
 }
 
 // Cwd Return a new path pointing to the current working directory.
-func (p *OsPath) Cwd() (*OsPath, error) {
+func (p *OsPath) Cwd() (Path, error) {
 	pth, err := os.Getwd()
 	if err != nil {
 		return nil, errors.Wrap(err, "get cwd failed")
@@ -43,12 +44,12 @@ func (p *OsPath) Cwd() (*OsPath, error) {
 }
 
 // Parent Return a new path for current path parent.
-func (p *OsPath) Parent() (*OsPath, error) {
+func (p *OsPath) Parent() (Path, error) {
 	pth, err := p.Absolute()
 	if err != nil {
 		return nil, errors.Wrap(err, "get parent failed")
 	}
-	dir := filepath.Dir(pth.Path)
+	dir := filepath.Dir(pth.String())
 	newP := New(dir)
 	return newP, nil
 }
@@ -82,13 +83,22 @@ func (p *OsPath) MkDir(mode os.FileMode, parents bool) (err error) {
 	return
 }
 
-// Open Reads the file named by filename and returns the contents.
-func (p *OsPath) Open() ([]byte, error) {
-	buf, err := ioutil.ReadFile(p.Path)
+// Open opens the named file for reading.
+func (p *OsPath) Open() (io.ReadCloser, error) {
+	f, err := os.Open(p.Path)
 	if err != nil {
 		return nil, err
 	}
-	return buf, nil
+	return f, err
+}
+
+// Open opens the named file for reading and writing.
+func (p *OsPath) OpenRW(flag int, mode os.FileMode) (io.ReadWriteCloser, error) {
+	f, err := os.OpenFile(p.Path, os.O_RDWR|flag, mode)
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
 }
 
 // Chmod changes the mode of the named file to mode.
@@ -97,11 +107,21 @@ func (p *OsPath) Chmod(mode os.FileMode) error {
 }
 
 // JoinPath Returns a new path, Combine current path with one or several arguments
-func (p *OsPath) JoinPath(elem ...string) *OsPath {
+func (p *OsPath) JoinPath(elem ...string) Path {
 	temp := []string{p.Path}
 	elem = append(temp, elem[0:]...)
 	newP := New(path.Join(elem...))
 	return newP
+}
+
+// String returns the file path represented by string.
+func (p *OsPath) String() string {
+	return p.Path
+}
+
+// Rename renames (moves) the file or directory to target.
+func (p *OsPath) Rename(target Path) error {
+	return os.Rename(p.Path, target.String())
 }
 
 // Exists reports current path parent exists.
@@ -131,4 +151,34 @@ func (p *OsPath) IsFile() bool {
 // IsAbs reports whether the path is absolute.
 func (p *OsPath) IsAbs() bool {
 	return filepath.IsAbs(p.Path)
+}
+
+// ReadBytes reads the file named by filename and returns the contents.
+func (p *OsPath) ReadBytes() ([]byte, error) {
+	buf, err := ioutil.ReadFile(p.Path)
+	if err != nil {
+		return nil, err
+	}
+	return buf, nil
+}
+
+// ReadText reads the file and returns the contents.
+func (p *OsPath) ReadText() (string, error) {
+	// TODO: transform encoding
+	b, err := p.ReadBytes()
+	if err != nil {
+		return "", err
+	}
+	return string(b), err
+}
+
+// WriteBytes writes a byte slice to the file.
+func (p *OsPath) WriteBytes(data []byte) error {
+	return ioutil.WriteFile(p.Path, data, os.ModePerm)
+}
+
+// WriteText writes a text to the file.
+func (p *OsPath) WriteText(text string) error {
+	// TODO: transform encoding
+	return p.WriteBytes([]byte(text))
 }
