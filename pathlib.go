@@ -10,20 +10,20 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Path
-type Path struct {
+// OsPath
+type OsPath struct {
 	Path string
 }
 
 // New Returns a new path.
-func New(path string) *Path {
-	p := new(Path)
+func New(path string) *OsPath {
+	p := new(OsPath)
 	p.Path = path
 	return p
 }
 
 // Absolute Returns an absolute representation of path.
-func (p *Path) Absolute() (*Path, error) {
+func (p *OsPath) Absolute() (*OsPath, error) {
 	pth, err := filepath.Abs(p.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "get absolute failed")
@@ -33,7 +33,7 @@ func (p *Path) Absolute() (*Path, error) {
 }
 
 // Cwd Return a new path pointing to the current working directory.
-func (p *Path) Cwd() (*Path, error) {
+func (p *OsPath) Cwd() (*OsPath, error) {
 	pth, err := os.Getwd()
 	if err != nil {
 		return nil, errors.Wrap(err, "get cwd failed")
@@ -43,7 +43,7 @@ func (p *Path) Cwd() (*Path, error) {
 }
 
 // Parent Return a new path for current path parent.
-func (p *Path) Parent() (*Path, error) {
+func (p *OsPath) Parent() (*OsPath, error) {
 	pth, err := p.Absolute()
 	if err != nil {
 		return nil, errors.Wrap(err, "get parent failed")
@@ -54,26 +54,26 @@ func (p *Path) Parent() (*Path, error) {
 }
 
 // Touch Create creates the named file with mode 0666 (before umask), regardless of whether it exists.
-func (p *Path) Touch() error {
+func (p *OsPath) Touch() error {
 	f, err := os.Create(p.Path)
 	f.Close()
 	return err
 }
 
 // Unlink Remove this file or link.
-func (p *Path) Unlink() error {
+func (p *OsPath) Unlink() error {
 	err := syscall.Unlink(p.Path)
 	return err
 }
 
 // RmDir Remove this directory. The directory must be empty.
-func (p *Path) RmDir() error {
+func (p *OsPath) RmDir() error {
 	err := os.Remove(p.Path)
 	return err
 }
 
 // MkDir Create a new directory at this given path.
-func (p *Path) MkDir(mode os.FileMode, parents bool) (err error) {
+func (p *OsPath) MkDir(mode os.FileMode, parents bool) (err error) {
 	if parents {
 		err = os.MkdirAll(p.Path, mode)
 	} else {
@@ -83,7 +83,7 @@ func (p *Path) MkDir(mode os.FileMode, parents bool) (err error) {
 }
 
 // Open Reads the file named by filename and returns the contents.
-func (p *Path) Open() ([]byte, error) {
+func (p *OsPath) Open() ([]byte, error) {
 	buf, err := ioutil.ReadFile(p.Path)
 	if err != nil {
 		return nil, err
@@ -92,12 +92,12 @@ func (p *Path) Open() ([]byte, error) {
 }
 
 // Chmod changes the mode of the named file to mode.
-func (p *Path) Chmod(mode os.FileMode) error {
+func (p *OsPath) Chmod(mode os.FileMode) error {
 	return os.Chmod(p.Path, mode)
 }
 
 // JoinPath Returns a new path, Combine current path with one or several arguments
-func (p *Path) JoinPath(elem ...string) *Path {
+func (p *OsPath) JoinPath(elem ...string) *OsPath {
 	temp := []string{p.Path}
 	elem = append(temp, elem[0:]...)
 	newP := New(path.Join(elem...))
@@ -105,13 +105,13 @@ func (p *Path) JoinPath(elem ...string) *Path {
 }
 
 // Exists reports current path parent exists.
-func (p *Path) Exists() bool {
+func (p *OsPath) Exists() bool {
 	_, err := os.Stat(p.Path)
 	return err == nil || os.IsExist(err)
 }
 
 // IsDir reports Whether this path is a directory.
-func (p *Path) IsDir() bool {
+func (p *OsPath) IsDir() bool {
 	f, err := os.Stat(p.Path)
 	if err != nil {
 		return false
@@ -120,7 +120,7 @@ func (p *Path) IsDir() bool {
 }
 
 // IsFile reports Whether this path is a regular file.
-func (p *Path) IsFile() bool {
+func (p *OsPath) IsFile() bool {
 	f, e := os.Stat(p.Path)
 	if e != nil {
 		return false
@@ -129,6 +129,6 @@ func (p *Path) IsFile() bool {
 }
 
 // IsAbs reports whether the path is absolute.
-func (p *Path) IsAbs() bool {
+func (p *OsPath) IsAbs() bool {
 	return filepath.IsAbs(p.Path)
 }
