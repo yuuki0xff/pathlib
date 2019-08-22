@@ -57,8 +57,10 @@ func (p *OsPath) Parent() (Path, error) {
 // Touch Create creates the named file with mode 0666 (before umask), regardless of whether it exists.
 func (p *OsPath) Touch() error {
 	f, err := os.Create(p.Path)
-	f.Close()
-	return err
+	if err != nil {
+		return err
+	}
+	return f.Close()
 }
 
 // Unlink Remove this file or link.
