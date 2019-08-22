@@ -61,14 +61,14 @@ func (p *MockPath) MkDir(mode os.FileMode, parents bool) error {
 	}
 	return p.Fs.Mkdir(p.Path, mode)
 }
-func (p *MockPath) Open() (io.ReadCloser, error) {
+func (p *MockPath) Open() (FileRO, error) {
 	f, err := p.Fs.Open(p.Path)
 	if err != nil {
 		return nil, err
 	}
 	return f, nil
 }
-func (p *MockPath) OpenRW(flag int, mode os.FileMode) (io.ReadWriteCloser, error) {
+func (p *MockPath) OpenRW(flag int, mode os.FileMode) (FileRW, error) {
 	f, err := p.Fs.OpenFile(p.Path, flag, mode)
 	if err != nil {
 		return nil, err

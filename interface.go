@@ -5,6 +5,19 @@ import (
 	"os"
 )
 
+// FileRO represents the opened file for reading.
+type FileRO interface {
+	io.ReadCloser
+	io.Seeker
+	io.ReaderAt
+}
+
+// FileRW represents the opened file for reading and writing.
+type FileRW interface {
+	FileRO
+	io.Writer
+}
+
 type Path interface {
 	// Path operations
 	Absolute() (Path, error)
@@ -18,8 +31,8 @@ type Path interface {
 	Unlink() error
 	RmDir() error
 	MkDir(mode os.FileMode, parents bool) error
-	Open() (io.ReadCloser, error)
-	OpenRW(flag int, mode os.FileMode) (io.ReadWriteCloser, error)
+	Open() (FileRO, error)
+	OpenRW(flag int, mode os.FileMode) (FileRW, error)
 	Chmod(mode os.FileMode) error
 	Rename(target Path) error
 	Exists() bool

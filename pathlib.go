@@ -1,7 +1,6 @@
 package pathlib
 
 import (
-	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -86,7 +85,7 @@ func (p *OsPath) MkDir(mode os.FileMode, parents bool) (err error) {
 }
 
 // Open opens the named file for reading.
-func (p *OsPath) Open() (io.ReadCloser, error) {
+func (p *OsPath) Open() (FileRO, error) {
 	f, err := os.Open(p.Path)
 	if err != nil {
 		return nil, err
@@ -95,7 +94,7 @@ func (p *OsPath) Open() (io.ReadCloser, error) {
 }
 
 // Open opens the named file for reading and writing.
-func (p *OsPath) OpenRW(flag int, mode os.FileMode) (io.ReadWriteCloser, error) {
+func (p *OsPath) OpenRW(flag int, mode os.FileMode) (FileRW, error) {
 	f, err := os.OpenFile(p.Path, os.O_RDWR|flag, mode)
 	if err != nil {
 		return nil, err
